@@ -7,6 +7,59 @@ Add --allow-privileged=true
     microk8s.start
 
 
+
+## Rook NFS
+
+https://rook.io/docs/rook/master/nfs.html
+
+    git clone https://github.com/rook/rook.git
+    cd rook/cluster/examples/kubernetes/nfs
+
+
+### Setup
+
+    apt install nfs-common
+
+
+### NFS Operator and Share
+
+    $ k create -f operator.yaml
+    $ k -n rook-nfs-system get pod
+    NAME                                    READY   STATUS    RESTARTS   AGE
+    rook-nfs-operator-65548dcccf-dmqzp      1/1     Running   0          39s
+    rook-nfs-provisioner-6b97f4d658-j9mq2   1/1     Running   0          38s
+
+    $ k create -f nfs.yaml
+    $ k -n rook-nfs get nfsservers.nfs.rook.io
+    NAME       AGE
+    rook-nfs   49s
+    $ k -n rook-nfs get pod
+    NAME         READY   STATUS    RESTARTS   AGE
+    rook-nfs-0   1/1     Running   0          51s
+
+
+### NFS Storage Class
+
+    $ k create -f sc.yaml
+    storageclass.storage.k8s.io/rook-nfs-share1 created
+    $ k get sc
+    NAME                          PROVISIONER               RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+    microk8s-hostpath (default)   microk8s.io/hostpath      Delete          Immediate           false                  186d
+    rook-nfs-share1               rook.io/nfs-provisioner   Delete          Immediate           false                  7s
+
+
+### NFS PVC
+
+    $ k create -f pvc.yaml
+    persistentvolumeclaim/rook-nfs-pv-claim created
+    $ k get pvc
+    NAME                STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+    rook-nfs-pv-claim   Bound    pvc-368a9ccc-440f-48b1-859f-d52832681ce4   1Mi        RWX            rook-nfs-share1   11s
+
+
+
+## Rook Ceph
+
 ### Clear out previously generated keys.
 
 Each time the operator is installed, it generates keys, so if starting again
